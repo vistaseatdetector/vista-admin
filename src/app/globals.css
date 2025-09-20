@@ -5,7 +5,9 @@
   --foreground: #171717;
 }
 
-@theme inline {
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -24,3 +26,44 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* soft gradient background for the whole app */
+body {
+  background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a);
+  color: #f1f5f9;
+}
+
+/* subtle scrollbars (WebKit) */
+::-webkit-scrollbar { height: 10px; width: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 9999px; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+/* 1) Give every grid inside <main class="vista-main"> a default gap
+   if the element doesn't already declare a Tailwind gap-* class. */
+.vista-main :where(.grid):not([class*="gap-"]) {
+  gap: 2rem; /* = Tailwind gap-8 */
+}
+
+/* 2) Fallback vertical spacing between stacked cards
+   (works even if not inside a grid). */
+.vista-main .vista-card {
+  margin-bottom: 2rem; /* = mb-8 */
+}
+.vista-main .vista-card:last-child {
+  margin-bottom: 0;
+}
+/* A) default gaps for any grid/flex inside the main content
+   (only if no Tailwind gap-* is already present) */
+.vista-main :where(.grid):not([class*="gap-"]) { gap: 2rem; }     /* = gap-8 */
+.vista-main :where(.flex):not([class*="gap-"]) { gap: 2rem; }
+
+/* B) vertical spacing between stacked sections (fallback) */
+.vista-main > * + * { margin-top: 2rem; }                         /* = mt-8 */
+
+/* C) ensure cards never “bleed” into each other visually */
+.vista-main .vista-card { 
+  position: relative; 
+  z-index: 0; 
+  overflow: hidden;        /* clips inner shadows/images */
+  margin: 0;               /* reset any weird margins */
+}
+.vista-main .vista-card + .vista-card { margin-top: 2rem; }       /* extra fallback */
