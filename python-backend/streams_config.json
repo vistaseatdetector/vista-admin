@@ -1,0 +1,18 @@
+{
+  "streams": [
+    {
+      "url": "webcam:0",
+      "org_id": "3e16a680-440e-492b-9399-a93951a9d45e",
+      "location_id": "ecd21419-c443-4e18-8e91-b6176bee2b7b",
+      "interval": 5,
+      "name": "Main Sanctuary Webcam",
+      "enabled": true
+    }
+  ],
+  "settings": {
+    "confidence_threshold": 0.5,
+    "max_concurrent_streams": 1,
+    "retry_interval": 30,
+    "log_level": "INFO"
+  }
+}

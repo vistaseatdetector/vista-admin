@@ -1,10 +1,6 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ---- Theme tokens ---- */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -21,49 +17,79 @@
   }
 }
 
+/* ---- Base html/body ---- */
+html, body { height: 100%; }
+
 body {
-  background: var(--background);
+  /* IMPORTANT: no page-wide color/gradient; let the Background component show through */
+  background: transparent;            /* ⟵ this fixes the dark frame */
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-/* soft gradient background for the whole app */
-body {
-  background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a);
-  color: #f1f5f9;
-}
 
-/* subtle scrollbars (WebKit) */
+/* You can keep a gradient on your NAV component itself, not on <body>. */
+
+/* ---- Nice-to-have polish ---- */
 ::-webkit-scrollbar { height: 10px; width: 10px; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 9999px; }
 html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
-/* 1) Give every grid inside <main class="vista-main"> a default gap
-   if the element doesn't already declare a Tailwind gap-* class. */
-.vista-main :where(.grid):not([class*="gap-"]) {
-  gap: 2rem; /* = Tailwind gap-8 */
-}
-
-/* 2) Fallback vertical spacing between stacked cards
-   (works even if not inside a grid). */
-.vista-main .vista-card {
-  margin-bottom: 2rem; /* = mb-8 */
-}
-.vista-main .vista-card:last-child {
-  margin-bottom: 0;
-}
-/* A) default gaps for any grid/flex inside the main content
-   (only if no Tailwind gap-* is already present) */
+/* ---- Vista layout helpers (optional, keep if you use them) ---- */
+/* default gaps for grid/flex if none specified */
 .vista-main :where(.grid):not([class*="gap-"]) { gap: 2rem; }     /* = gap-8 */
 .vista-main :where(.flex):not([class*="gap-"]) { gap: 2rem; }
 
-/* B) vertical spacing between stacked sections (fallback) */
+/* fallback vertical spacing between stacked sections */
 .vista-main > * + * { margin-top: 2rem; }                         /* = mt-8 */
 
-/* C) ensure cards never “bleed” into each other visually */
+/* ensure cards never “bleed” into each other visually */
 .vista-main .vista-card { 
   position: relative; 
   z-index: 0; 
-  overflow: hidden;        /* clips inner shadows/images */
-  margin: 0;               /* reset any weird margins */
+  overflow: hidden;
+  margin: 0;
 }
-.vista-main .vista-card + .vista-card { margin-top: 2rem; }       /* extra fallback */
+.vista-main .vista-card + .vista-card { margin-top: 2rem; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+/* Full-viewport image background behind everything */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("/images/dashboard/bg-church4.jpeg") center / cover no-repeat;
+  z-index: -1;          /* behind content */
+}
+body::after {
+  /* optional dark overlay for contrast */
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.30);
+  z-index: -1;
+}
+
+/* Red strobing overlay for verified threats (more pronounced) */
+@keyframes pulse-red-alert {
+  0% { opacity: 0.25; filter: saturate(1.2) brightness(1.0); }
+  50% { opacity: 0.85; filter: saturate(1.5) brightness(1.15); }
+  100% { opacity: 0.25; filter: saturate(1.2) brightness(1.0); }
+}
+
+.strobe-red-alert {
+  background:
+    radial-gradient(ellipse at center,
+      rgba(255,0,0,0.65) 0%,
+      rgba(255,0,0,0.45) 35%,
+      rgba(255,0,0,0.28) 60%,
+      rgba(255,0,0,0.12) 80%,
+      transparent 100%);
+  animation: pulse-red-alert 0.85s ease-in-out infinite;
+  /* Add a subtle glow to the card edges while strobing */
+  box-shadow: inset 0 0 60px rgba(255,0,0,0.45), 0 0 36px rgba(255,0,0,0.35);
+}
+
+/* Allow pages to suppress strobes globally (e.g., after clicking All Clear) */
+body.strobe-suppressed .strobe-red-alert {
+  display: none !important;
+}

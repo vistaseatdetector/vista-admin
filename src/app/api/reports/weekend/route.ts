@@ -1,0 +1,157 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { DateTime } from 'luxon';
+import { orgNow, weekendWindowFor, weekendWindowForDate, resolveOrgTz, labelWeekend } from '@/lib/time/weekend';
+import { createServerClient } from '@supabase/ssr'; // adjust import to your helper
+import { cookies } from 'next/headers';
+import { createClient as createServerSupabase } from "@/lib/supabase/server";
+
+
+type WeekendResponse = {
+  orgId: string;
+  orgTimezone: string;
+  weekendLabel: string;
+  window: { startISO: string; endISO: string };
+  masses: Array<{
+    mass_id: string;
+    mass_title: string | null;
+    occurrence_id: string;
+    occurrence_start_local: string; // pretty label in local tz
+    headcount: number;
+  }>;
+  kpis: {
+    total: number;
+    avgPerMass: number;
+    maxService: { label: string; headcount: number } | null;
+  };
+};
+
+async function getServerSupabase() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!, // or service role if you prefer server-only
+    { cookies: { get: (key: string) => cookieStore.get(key)?.value } }
+  );
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const url = new URL(req.url);
+    const orgId = url.searchParams.get('orgId');
+    const dateISO = url.searchParams.get('date'); // optional; if not present we use "now"
+    const massIdsParam = url.searchParams.get('massIds'); // optional CSV of mass ids
+
+    if (!orgId) {
+      return NextResponse.json({ error: 'orgId is required' }, { status: 400 });
+    }
+const supa = createServerSupabase();
+
+
+    // 1) Get org + timezone
+    const { data: org, error: orgErr } = await supa
+      .from('orgs')
+      .select('id, timezone')
+      .eq('id', orgId)
+      .single();
+
+    if (orgErr || !org) {
+      return NextResponse.json({ error: 'Org not found' }, { status: 404 });
+    }
+
+    const orgTz = resolveOrgTz(org.timezone);
+
+    // 2) Compute weekend window
+    let interval;
+    if (dateISO) {
+      interval = weekendWindowForDate(dateISO, orgTz);
+    } else {
+      interval = weekendWindowFor(orgNow(orgTz));
+    }
+    const start = interval.start!;
+    const end = interval.end!;
+    const weekendLabel = labelWeekend(interval);
+
+    // 3) Fetch occurrences in window (with optional massId filter)
+    const massIdFilter = massIdsParam
+      ? massIdsParam.split(',').map(s => s.trim()).filter(Boolean)
+      : null;
+
+    // We’ll use the view created earlier for quick access.
+    // v_occurrences_with_weekend contains headcount and weekend_start_utc.
+    let query = supa
+      .from('v_occurrences_with_weekend')
+      .select('occurrence_id, org_id, mass_id, starts_at, headcount, org_timezone')
+      .eq('org_id', orgId)
+      .gte('starts_at', start.toUTC().toISO())
+      .lt('starts_at', end.toUTC().toISO());
+
+    if (massIdFilter && massIdFilter.length > 0) {
+      query = query.in('mass_id', massIdFilter);
+    }
+
+    const { data: occurrences, error: occErr } = await query;
+
+    if (occErr) {
+      return NextResponse.json({ error: occErr.message }, { status: 500 });
+    }
+
+    if (!occurrences || occurrences.length === 0) {
+      const payload: WeekendResponse = {
+        orgId,
+        orgTimezone: orgTz,
+        weekendLabel,
+        window: { startISO: start.toISO()!, endISO: end.toISO()! },
+        masses: [],
+        kpis: { total: 0, avgPerMass: 0, maxService: null },
+      };
+      return NextResponse.json(payload);
+    }
+
+    // 4) Join Mass titles
+    const massIds = Array.from(new Set(occurrences.map(o => o.mass_id)));
+    const { data: massesMeta, error: massesErr } = await supa
+      .from('masses')
+      .select('id, title')
+      .in('id', massIds);
+
+    if (massesErr) {
+      return NextResponse.json({ error: massesErr.message }, { status: 500 });
+    }
+    const massTitleMap = new Map<string, string | null>();
+    (massesMeta ?? []).forEach(m => massTitleMap.set(m.id, m.title ?? null));
+
+    // 5) Map rows to frontend-friendly objects
+    const rows = occurrences.map(o => {
+      const local = DateTime.fromISO(o.starts_at, { zone: orgTz });
+      const label = local.toFormat('ccc h:mma'); // e.g., "Sat 5:00PM"
+      return {
+        mass_id: o.mass_id,
+        mass_title: massTitleMap.get(o.mass_id) ?? null,
+        occurrence_id: o.occurrence_id,
+        occurrence_start_local: label,
+        headcount: o.headcount ?? 0,
+      };
+    });
+
+    // 6) KPIs
+    const total = rows.reduce((s, r) => s + (r.headcount || 0), 0);
+    const avgPerMass = rows.length > 0 ? Math.round((total / rows.length) * 10) / 10 : 0;
+    const maxRow = rows.reduce((best, r) => (r.headcount > (best?.headcount ?? -1) ? r : best), null as null | typeof rows[number]);
+    const maxService = maxRow
+      ? { label: `${maxRow.mass_title ?? 'Mass'} (${maxRow.occurrence_start_local})`, headcount: maxRow.headcount }
+      : null;
+
+    const payload: WeekendResponse = {
+      orgId,
+      orgTimezone: orgTz,
+      weekendLabel,
+      window: { startISO: start.toISO()!, endISO: end.toISO()! },
+      masses: rows.sort((a, b) => a.occurrence_start_local.localeCompare(b.occurrence_start_local)),
+      kpis: { total, avgPerMass, maxService },
+    };
+
+    return NextResponse.json(payload);
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message ?? 'Unknown error' }, { status: 500 });
+  }
+}

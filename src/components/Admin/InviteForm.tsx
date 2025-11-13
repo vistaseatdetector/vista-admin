@@ -47,7 +47,7 @@ export default function InviteForm({ orgId }: { orgId: string }) {
           <select
             className="rounded-lg border px-3 py-2"
             value={role}
-            onChange={(e) => setRole(e.target.value as any)}
+            onChange={(e) => setRole(e.target.value as "admin" | "usher" | "viewer")}
           >
             <option value="viewer">viewer</option>
             <option value="usher">usher</option>

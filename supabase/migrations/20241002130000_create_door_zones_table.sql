@@ -1,0 +1,4 @@
+-- 20241002130000_create_door_zones_table.sql
+-- This migration is now a no-op.
+-- The door_zones table, index, and policies are already created by
+-- 20241002120000_create_door_zones_table.sql on both local and remote.

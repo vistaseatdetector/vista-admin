@@ -1,0 +1,90 @@
+"use client";
+import React, { useMemo } from "react";
+
+type MonthYear = { year: number; month: number };
+
+type Props = {
+  orgId: string;
+  weekendStartISO?: string; // Weekend window start (optional)
+  monthYear?: MonthYear;    // For month exports (optional)
+
+  /** NEW: filter list (empty/undefined => all masses) */
+  massIds?: string[];
+  /** NEW: trend mode for month/trend exports if your routes care about it */
+  trendMode?: "weekend_total" | "per_mass";
+};
+
+export default function DownloadButtons({
+  orgId,
+  weekendStartISO,
+  monthYear,
+  massIds,
+  trendMode,
+}: Props) {
+  const common = useMemo(() => {
+    const p = new URLSearchParams();
+    p.set("orgId", orgId);
+    if (massIds && massIds.length) p.set("massIds", massIds.join(","));
+    if (trendMode) p.set("mode", trendMode);
+    return p;
+  }, [orgId, massIds, trendMode]);
+
+  // Weekend CSV/PDF
+  const weekendQs = useMemo(() => {
+    const p = new URLSearchParams(common);
+    if (weekendStartISO) p.set("date", weekendStartISO); // your API snaps to weekend by date
+    return p;
+  }, [common, weekendStartISO]);
+
+  const weekendCsvUrl = `/api/reports/weekend/csv?${weekendQs.toString()}`;
+  const weekendPdfUrl = `/api/reports/weekend/pdf?${weekendQs.toString()}`;
+
+  // Month CSV/PDF
+  const monthQs = useMemo(() => {
+    const p = new URLSearchParams(common);
+    if (monthYear) {
+      p.set("year", String(monthYear.year));
+      p.set("month", String(monthYear.month));
+    }
+    return p;
+  }, [common, monthYear]);
+
+  const monthCsvUrl = `/api/reports/month/csv?${monthQs.toString()}`;
+  const monthPdfUrl = `/api/reports/month/pdf?${monthQs.toString()}`;
+
+  return (
+    <div className="flex items-center gap-2">
+      {/* Weekend */}
+      <a
+        href={weekendCsvUrl}
+        className="px-3 py-2 rounded-lg border border-white/20 bg-white/10 hover:bg-white/15"
+      >
+        Weekend CSV
+      </a>
+      <a
+        href={weekendPdfUrl}
+        className="px-3 py-2 rounded-lg border border-white/20 bg-white/10 hover:bg-white/15"
+      >
+        Weekend PDF
+      </a>
+
+      {/* Month */}
+      {monthYear && (
+        <>
+          <a
+            href={monthCsvUrl}
+            className="px-3 py-2 rounded-lg border border-white/20 bg-white/10 hover:bg-white/15"
+          >
+            Month CSV
+          </a>
+          <a
+            href={monthPdfUrl}
+            className="px-3 py-2 rounded-lg border border-white/20 bg-white/10 hover:bg-white/15"
+          >
+            Month PDF
+          </a>
+        </>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,9 @@
+// TODO: merge — Source homescreen uses `AdminDashboard` composition instead of inline data fetch.
+"use client";
+
+import AdminDashboard from "@/components/Admin/AdminDashboard";
+
+export default function AppHomeClient() {
+  return <AdminDashboard />;
+}
+

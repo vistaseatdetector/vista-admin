@@ -19,7 +19,7 @@ export default function OccChart({ data }: { data: OccPoint[] }) {
             <YAxis />
             <Tooltip
               labelFormatter={(v) => new Date(v).toLocaleString()}
-              formatter={(val: any) => [val, "People"]}
+              formatter={(val: unknown) => [val as number | string, "People"]}
             />
             <Line type="monotone" dataKey="people" dot={false} />
           </LineChart>

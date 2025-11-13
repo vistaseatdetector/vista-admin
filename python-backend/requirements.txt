@@ -1,0 +1,22 @@
+# Vista Integration Requirements
+httpx>=0.24.0
+supabase>=1.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+asyncio-mqtt>=0.13.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+
+# YOLOv11 Detection Requirements with ByteTrack
+ultralytics>=8.3.0
+pillow>=10.0.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# FastAPI Detection Service
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
+# Additional tracking dependencies
+lap>=0.4.0
+cython-bbox>=0.1.3

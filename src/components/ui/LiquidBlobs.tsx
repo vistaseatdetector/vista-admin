@@ -1,0 +1,12 @@
+export default function LiquidBlobs() {
+  return (
+    <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      {/* teal blob */}
+      <div className="absolute -top-24 -left-20 h-72 w-72 blur-3xl opacity-50
+        bg-[radial-gradient(closest-side,rgba(45,212,191,0.6),transparent_60%)]" />
+      {/* blue blob */}
+      <div className="absolute -bottom-24 -right-16 h-80 w-80 blur-3xl opacity-50
+        bg-[radial-gradient(closest-side,rgba(59,130,246,0.55),transparent_60%)]" />
+    </div>
+  );
+}

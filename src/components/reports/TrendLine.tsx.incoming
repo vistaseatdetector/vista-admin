@@ -1,0 +1,65 @@
+// TODO: merge — Source uses combined area/line chart with recharts client.
+"use client";
+
+import { TrendPayload } from "@/types/reports";
+import { DateTime } from "luxon";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "@/components/charts/RechartsClient";
+
+type Props = { payload: TrendPayload };
+
+export default function TrendLine({ payload }: Props) {
+  if (payload.mode === "weekend_total") {
+    const data = payload.points.map(p => ({
+      x: DateTime.fromISO(p.weekend_start_local, { zone: payload.orgTimezone }).toFormat("LLL d"),
+      total: p.total,
+    }));
+    return (
+      <div className="w-full h-72">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="x" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="total" dot />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  } else {
+    // per_mass: group by mass_title into series
+    const groups = new Map<string, { x: string } & { [k: string]: number }>();
+    const titles = new Set<string>();
+
+    for (const p of payload.points) {
+      const x = DateTime.fromISO(p.weekend_start_local, { zone: payload.orgTimezone }).toFormat("LLL d");
+      const key = x;
+      titles.add(p.mass_title ?? p.mass_id);
+      if (!groups.has(key)) groups.set(key, { x });
+      groups.get(key)![p.mass_title ?? p.mass_id] = p.total;
+    }
+
+    const data = Array.from(groups.values()).sort((a, b) => {
+      // attempt chronological sort by original ISO inside map key
+      return 0; // Recharts XAxis with string labels will show in insertion order
+    });
+
+    return (
+      <div className="w-full h-72">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="x" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            {Array.from(titles).map((t) => (
+              <Line key={t} type="monotone" dataKey={t} dot />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+}

@@ -1,0 +1,105 @@
+// TODO: merge — Incoming API route from vista-admin; review env usage + schema before enabling.
+import { NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase/server-admin";
+
+export const runtime = "nodejs";
+
+type Body = {
+  orgId: string;
+  email: string;
+  name?: string | null;
+};
+
+export async function POST(req: Request) {
+  try {
+    const { orgId, email, name } = (await req.json()) as Body;
+
+    const normalizedEmail = email?.trim().toLowerCase() ?? "";
+    const trimmedName = name?.trim() || null;
+
+    if (!orgId || !normalizedEmail) {
+      return NextResponse.json(
+        { error: "Missing orgId or email" },
+        { status: 400 }
+      );
+    }
+
+    const { data: existingUsher, error: existingErr } = await supabaseAdmin
+      .from("ushers")
+      .select("*")
+      .eq("org_id", orgId)
+      .eq("email", normalizedEmail)
+      .maybeSingle();
+
+    if (existingErr) {
+      return NextResponse.json({ error: existingErr.message }, { status: 400 });
+    }
+
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.admin.getUserByEmail(
+      normalizedEmail
+    );
+    const profileId = !userErr && userData?.user ? userData.user.id : null;
+
+    let saved = existingUsher ?? null;
+
+    if (saved) {
+      const updatePayload: Record<string, unknown> = {};
+      if (trimmedName) updatePayload.name = trimmedName;
+      if (profileId && profileId !== saved.profile_id) {
+        updatePayload.profile_id = profileId;
+        updatePayload.active = true;
+      }
+      if (Object.keys(updatePayload).length > 0) {
+        const { data, error } = await supabaseAdmin
+          .from("ushers")
+          .update(updatePayload)
+          .eq("id", saved.id)
+          .select("*")
+          .single();
+        if (error) {
+          return NextResponse.json({ error: error.message }, { status: 400 });
+        }
+        saved = data;
+      }
+    } else {
+      const insertPayload = {
+        org_id: orgId,
+        profile_id: profileId,
+        name:
+          trimmedName ||
+          userData?.user?.user_metadata?.full_name ||
+          normalizedEmail,
+        email: normalizedEmail,
+        phone: null,
+        active: Boolean(profileId),
+      };
+      const { data, error } = await supabaseAdmin
+        .from("ushers")
+        .insert(insertPayload)
+        .select("*")
+        .single();
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      saved = data;
+    }
+
+    const { error: inviteErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+      normalizedEmail,
+      { data: trimmedName ? { name: trimmedName } : undefined }
+    );
+
+    if (inviteErr && inviteErr.status !== 422 && inviteErr.code !== "422") {
+      return NextResponse.json({ error: inviteErr.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ usher: saved });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unexpected error";
+    return NextResponse.json(
+      { error: message },
+      { status: 500 }
+    );
+  }
+}

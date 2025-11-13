@@ -1,0 +1,22 @@
+// TODO: merge — Source swaps to next/image with optional overlay tint.
+"use client";
+
+import Image from "next/image";
+
+export default function Background({
+  src = "/images/dashboard/bg-church4.jpg",
+  alt = "Background",
+  overlay = true,
+}: {
+  src?: string;
+  alt?: string;
+  overlay?: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 -z-10">
+      <Image src={src} alt={alt} fill priority sizes="100vw" className="object-cover" />
+      {overlay && <div className="absolute inset-0 bg-black/40" />}
+    </div>
+  );
+}
+

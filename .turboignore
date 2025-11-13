@@ -1,0 +1,8 @@
+# Exclude Python virtual environments and backend files from Turbopack
+python-backend/venv/
+python-backend/venv_enhanced/
+python-backend/__pycache__/
+python-backend/*.pyc
+python-backend/*.pyo
+python-backend/*.log
+python-backend/*.pt

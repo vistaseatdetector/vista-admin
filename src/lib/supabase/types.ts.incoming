@@ -1,0 +1,4 @@
+// TODO: merge — Provide generated Supabase `Database` types from vista-admin before replacing.
+// Export a stub so downstream imports compile once merged.
+export type Database = Record<string, never>;
+

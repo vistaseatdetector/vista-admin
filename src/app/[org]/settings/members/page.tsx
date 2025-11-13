@@ -1,11 +1,12 @@
 import InviteForm from "@/components/Admin/InviteForm";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 type Profile = { id: string; email: string | null; full_name: string | null };
 type Member = { role: "admin" | "usher" | "viewer"; profiles: Profile | Profile[] | null };
 
 export default async function MembersPage({ params }: { params: { org: string } }) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // 1) Load org by slug
   const { data: org, error: orgErr } = await supabase
@@ -18,9 +19,29 @@ export default async function MembersPage({ params }: { params: { org: string } 
     return <div className="p-6">Org not found.</div>;
   }
 
-  // 2) Load members + joined profile
-  const { data, error } = await supabase
-    .from("org_memberships")
+  const { data: roleCheck, error: roleError } = await supabase
+    .from("user_org_roles")
+    .select("role")
+    .eq("org_id", org.id)
+    .limit(1);
+
+  if (roleError || roleCheck?.[0]?.role !== "admin") {
+    return <div className="p-6 text-red-600">Only admins can view members.</div>;
+  }
+
+  let serviceClient: ReturnType<typeof createServiceRoleClient>;
+  try {
+    serviceClient = createServiceRoleClient();
+  } catch (serviceError) {
+    return (
+      <div className="p-6 text-red-600">
+        Supabase service role configuration is missing.
+      </div>
+    );
+  }
+
+  const { data, error } = await serviceClient
+    .from("user_org_roles")
     .select("role, profiles:profiles(id, email, full_name)")
     .eq("org_id", org.id);
 

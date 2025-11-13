@@ -1,0 +1,110 @@
+// TODO: merge — Source adds props (blur/elevated/tinted) and subcomponents for richer glass UI.
+"use client";
+
+import * as React from "react";
+import { cn } from "@/lib/cn";
+
+type BlurSize = "lg" | "xl" | "2xl" | "3xl";
+
+export interface GlassPanelProps
+  extends React.HTMLAttributes<HTMLDivElement> {
+  /** Extra blur strength (default: xl) */
+  blur?: BlurSize;
+  /** Slightly stronger border + shadow (default: false) */
+  elevated?: boolean;
+  /** Remove default padding (default: false) */
+  unpadded?: boolean;
+  /** Make it feel clickable (adds hover ring + cursor) */
+  interactive?: boolean;
+  /** Optional gradient tint on top (good for contrast) */
+  tinted?: boolean;
+}
+
+const blurMap: Record<BlurSize, string> = {
+  lg: "backdrop-blur-lg",
+  xl: "backdrop-blur-xl",
+  "2xl": "backdrop-blur-2xl",
+  "3xl": "backdrop-blur-3xl",
+};
+
+/**
+ * Liquid Glass panel:
+ * - translucent frosted background
+ * - subtle border
+ * - soft shadow and rounded corners
+ * - optional inner highlight + tint
+ */
+const GlassPanel = React.forwardRef<HTMLDivElement, GlassPanelProps>(
+  (
+    {
+      className,
+      children,
+      blur = "xl",
+      elevated = false,
+      unpadded = false,
+      interactive = false,
+      tinted = false,
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "relative rounded-2xl bg-white/10",
+          blurMap[blur],
+          "border border-white/20 shadow-[0_8px_30px_rgba(0,0,0,0.15)]",
+          elevated && "border-white/25 shadow-[0_12px_40px_rgba(0,0,0,0.25)]",
+          !unpadded && "p-6",
+          interactive &&
+            "cursor-pointer transition ring-0 hover:ring-1 hover:ring-white/30",
+          tinted &&
+            "after:absolute after:inset-0 after:rounded-2xl after:bg-[#0b2439]/[0.08] after:pointer-events-none",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+);
+GlassPanel.displayName = "GlassPanel";
+
+export const GlassHeader = ({
+  className,
+  children,
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn("mb-4 flex items-center justify-between", className)}>
+    {children}
+  </div>
+);
+
+export const GlassTitle = ({
+  className,
+  children,
+}: React.HTMLAttributes<HTMLHeadingElement>) => (
+  <h2 className={cn("text-lg font-semibold text-white/90", className)}>
+    {children}
+  </h2>
+);
+
+export const GlassSubtitle = ({
+  className,
+  children,
+}: React.HTMLAttributes<HTMLParagraphElement>) => (
+  <p className={cn("text-sm text-white/70", className)}>{children}</p>
+);
+
+export const GlassFooter = ({
+  className,
+  children,
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn("mt-4 pt-4 border-t border-white/10", className)}>
+    {children}
+  </div>
+);
+
+export default GlassPanel;
+

@@ -1,0 +1,34 @@
+// TODO: merge — Source glass card tweaks tint + shadow for dashboard sections.
+"use client";
+import * as React from "react";
+
+export default function GlassCard({
+  className = "",
+  children,
+}: React.PropsWithChildren<{ className?: string }>) {
+  return (
+    <div
+      className={[
+        // core glass look
+        "relative rounded-2xl border border-white/20 bg-white/10 backdrop-blur-2xl",
+        // depth
+        "shadow-[0_8px_30px_rgba(0,0,0,0.2)]",
+        
+        // subtle dark tint for readability (adjust 0.06→0.10 for less transparency)
+        "after:absolute after:inset-0 after:rounded-2xl after:pointer-events-none",
+        "after:bg-[rgba(11,36,57,0.06)]",
+        // default padding
+        "p-6",
+        className,
+      ].join(" ")}
+    >
+      {children}
+    </div>
+  );
+}
+
+
+
+
+
+

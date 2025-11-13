@@ -15,7 +15,7 @@ export default function MassChart({ data, total }: { data: MassDatum[]; total: n
           <BarChart data={data}>
             <XAxis dataKey="label" interval={0} angle={-20} textAnchor="end" height={50} />
             <YAxis />
-            <Tooltip formatter={(v: any) => [v, "People"]} />
+            <Tooltip formatter={(v: unknown) => [v as number | string, "People"]} />
             <Bar dataKey="people" />
           </BarChart>
         </ResponsiveContainer>

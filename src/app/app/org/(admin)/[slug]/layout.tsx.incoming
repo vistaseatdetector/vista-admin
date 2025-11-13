@@ -1,0 +1,24 @@
+// TODO: merge — Source layout enforces admin auth server-side and wraps with background shell.
+import React from "react";
+import { requireAdminForOrg } from "@/lib/auth/requireAdmin";
+import Background from "@/components/ui/Background";
+import AppShell from "@/components/layout/AppShell";
+
+export default async function OrgLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: { slug: string };
+}) {
+  await requireAdminForOrg(params.slug);
+  return (
+    <div className="relative min-h-dvh">
+      <Background src="/images/dashboard/bg-church4.jpg" />
+      <div className="relative z-10 px-2 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8">
+        <AppShell>{children}</AppShell>
+      </div>
+    </div>
+  );
+}
+
