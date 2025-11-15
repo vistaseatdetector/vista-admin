@@ -6,8 +6,8 @@ export async function GET() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_URL: !!process.env.SUPABASE_URL,
     SUPABASE_ANON_KEY: !!process.env.SUPABASE_ANON_KEY,
+    SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
     NODE_ENV: process.env.NODE_ENV ?? null,
     VERCEL_ENV: process.env.VERCEL_ENV ?? null,
   });
 }
-

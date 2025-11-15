@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createAuthClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { supabaseAdmin } from "@/lib/supabase/server-admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
 
 async function getOrgIdBySlug(service: SupabaseClient, slug: string) {
   // Try primary orgs table first
@@ -34,7 +34,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const { slug } = await params;
     const supabaseAuth = createAuthClient();
-    const service = supabaseAdmin;
+    const service = createSupabaseAdminClient();
+    if (!service) {
+      return NextResponse.json(
+        { error: "Supabase admin client is not configured on the server." },
+        { status: 500 }
+      );
+    }
 
     // Require user session (so only logged-in users can add)
     const { data: { user } } = await supabaseAuth.auth.getUser();

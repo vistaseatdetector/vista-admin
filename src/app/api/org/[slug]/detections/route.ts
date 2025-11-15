@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!; // server-only
+import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
 
 type DetectionPayload = {
   stream_id?: string | null;
@@ -21,11 +18,13 @@ export async function POST(
   { params }: { params: { slug: string } }
 ) {
   try {
-    if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-      return NextResponse.json({ error: "Server env not configured" }, { status: 500 });
+    const supabase = createSupabaseAdminClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Supabase admin client is not configured on the server." },
+        { status: 500 }
+      );
     }
-
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const slug = params.slug;
     const body = (await req.json()) as DetectionPayload;
 

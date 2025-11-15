@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createSupabaseAdminClient } from '@/lib/supabase/server-admin';
 
 export async function GET() {
   try {
-    // Test with service role
-    const supabaseAdmin = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
+    const supabaseAdmin = createSupabaseAdminClient();
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Supabase admin client is not configured on the server.' },
+        { status: 500 }
+      );
+    }
 
     console.log('🔧 Testing Supabase write access...');
-    console.log('URL:', process.env.SUPABASE_URL);
+    // Avoid logging full URLs/keys in production
+    console.log('URL present:', !!(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL));
     
     // Try to create the orgs table
     const { error: orgsError } = await supabaseAdmin
@@ -53,7 +50,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       connection: {
-        url: process.env.SUPABASE_URL,
+        hasUrl: !!(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL),
         hasServiceRole: !!process.env.SUPABASE_SERVICE_ROLE_KEY
       },
       tables: {
