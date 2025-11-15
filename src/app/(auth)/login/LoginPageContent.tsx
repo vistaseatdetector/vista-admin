@@ -3,16 +3,14 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-
 import GlassPanel from "@/components/ui/GlassPanel";
 
 export default function LoginPageContent() {
   const router = useRouter();
-  const qs = useSearchParams();
-  const next = qs.get("next") || "/app";
+  const next = "/app"; // ← no useSearchParams; always go to /app for now
 
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
@@ -20,7 +18,7 @@ export default function LoginPageContent() {
   const [err, setErr] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault(); // ← stops full page reload
+    e.preventDefault();
     setErr(null);
     setLoading(true);
 
@@ -37,7 +35,7 @@ export default function LoginPageContent() {
       return;
     }
 
-    router.replace(next); // ← go to dashboard (or org select)
+    router.replace(next);
   }
 
   return (
