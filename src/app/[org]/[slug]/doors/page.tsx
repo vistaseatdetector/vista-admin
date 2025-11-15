@@ -435,7 +435,12 @@ export default function DoorsPage() {
     try {
       console.log('🔍 Loading zones from backend for camera:', featuredStreamId);
       
-      const response = await fetch(`http://127.0.0.1:8001/zones/${featuredStreamId}`, {
+      const DETECTION_BASE_URL = process.env.NEXT_PUBLIC_DETECTION_API_URL;
+      if (!DETECTION_BASE_URL) {
+        console.warn('NEXT_PUBLIC_DETECTION_API_URL not set; skipping backend zone load');
+        return;
+      }
+      const response = await fetch(`${DETECTION_BASE_URL}/zones/${featuredStreamId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

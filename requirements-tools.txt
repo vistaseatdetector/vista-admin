@@ -4,6 +4,8 @@
 ultralytics>=8.0.0
 opencv-python>=4.5.0
 numpy>=1.21.0,<2.0  # Pin to <2.0 if NumPy 2.0 causes conflicts
+fastapi>=0.110
+uvicorn[standard]>=0.22
 
 # Optional: For GPU acceleration (if CUDA available)
 # torch>=1.11.0

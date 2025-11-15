@@ -34,3 +34,24 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## YOLO Detection Service (FastAPI)
+
+This repo includes a Python FastAPI service that powers YOLO-based people detection and zone counting.
+
+- Local development:
+
+  ```bash
+  # in a Python venv
+  pip install -r requirements-tools.txt
+  uvicorn yolo_api.main:app --host 0.0.0.0 --port 8001
+  ```
+
+- Configure the Next.js app to talk to it by setting an env var:
+
+  ```bash
+  # .env.local
+  NEXT_PUBLIC_DETECTION_API_URL=http://localhost:8001
+  ```
+
+- In production, set `NEXT_PUBLIC_DETECTION_API_URL` to your deployed YOLO API base URL. The app also exposes a server proxy at `/api/detection` that reads `DETECTION_SERVICE_URL` if you prefer server-side integration.

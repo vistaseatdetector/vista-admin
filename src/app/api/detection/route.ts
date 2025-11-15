@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// YOLOv11 Detection Service URL (override via env if provided)
-const DETECTION_SERVICE_URL = process.env.DETECTION_SERVICE_URL || "http://127.0.0.1:8001";
+// YOLO Detection Service URL
+// Prefer server var DETECTION_SERVICE_URL; fall back to public var for convenience; then localhost.
+const DETECTION_SERVICE_URL =
+  process.env.DETECTION_SERVICE_URL ||
+  process.env.NEXT_PUBLIC_DETECTION_API_URL ||
+  "http://127.0.0.1:8001";
 const DETECTION_HEALTH_CHECK = (process.env.DETECTION_HEALTH_CHECK || "true").toLowerCase() !== "false";
 let lastHealthOkAt = 0;
 const HEALTH_CACHE_MS = 15000; // cache OK health for 15s to avoid per-request overhead
